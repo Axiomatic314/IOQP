@@ -108,6 +108,10 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
+    for (qry, qry_time) in qrys.iter().zip(hist.iter()) {
+        println!("{},{}µs,ioqp",qry.id,qry_time)
+    }
+
     hist.sort_unstable();
     let n = hist.len() as f32;
     let total_time = hist.iter().sum::<u64>();
