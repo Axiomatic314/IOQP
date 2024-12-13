@@ -1,4 +1,4 @@
-use std::ops::Index;
+use std::ops::{Index, Range};
 
 #[derive(Debug)]
 pub struct Byte {
@@ -22,6 +22,10 @@ impl Byte {
 
     pub fn advance(&mut self, bytes: usize) {
         self.start += bytes;
+    }
+
+    pub fn as_range(&mut self) -> Range<usize> {
+        self.start..self.stop
     }
 }
 

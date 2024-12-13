@@ -23,6 +23,8 @@ use crate::search;
 use crate::util;
 use crate::ScoreType;
 
+use compression;
+
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Index<C: crate::compress::Compressor> {
     docmap: Vec<String>,
@@ -257,30 +259,44 @@ impl<Compressor: crate::compress::Compressor> Index<Compressor> {
             }
             let num_postings = impact_group.count() as i64;
             let impact = impact_group.impact();
-            while let Some(chunk) = impact_group
-                .next_large_chunk::<Compressor>(&self.list_data, &mut data.large_decode_buf)
-            {
-                chunk.iter().cloned().for_each(|doc_id| {
-                    let doc_id = doc_id as usize;
-                    let chunk_id = doc_id >> search::CHUNK_SHIFT;
-                    let accum = unsafe { accumulators.get_unchecked_mut(doc_id) };
-                    *accum += impact as ScoreType;
-                    let chnk = unsafe { chunks.get_unchecked_mut(chunk_id) };
-                    *chnk = (*chnk).max(*accum);
-                });
-            }
-            while let Some(chunk) =
-                impact_group.next_chunk::<Compressor>(&self.list_data, &mut data.decode_buf)
-            {
-                chunk.iter().cloned().for_each(|doc_id| {
-                    let doc_id = doc_id as usize;
-                    let chunk_id = doc_id >> search::CHUNK_SHIFT;
-                    let accum = unsafe { accumulators.get_unchecked_mut(doc_id) };
-                    *accum += impact as ScoreType;
-                    let chnk = unsafe { chunks.get_unchecked_mut(chunk_id) };
-                    *chnk = (*chnk).max(*accum);
-                });
-            }
+            let source: &[u8] = &self.list_data[impact_group.bytes.as_range()];
+
+            compression::decode(source, &mut data.decode_buf, impact_group.count());
+            let mut chunk = vec![];
+            chunk.extend_from_slice(&data.decode_buf[..(num_postings as usize)]);
+            chunk.iter().cloned().for_each(|doc_id|{
+                let doc_id = doc_id as usize;
+                let chunk_id = doc_id >> search::CHUNK_SHIFT;
+                let accum = unsafe { accumulators.get_unchecked_mut(doc_id) };
+                *accum += impact as ScoreType;
+                let chnk = unsafe { chunks.get_unchecked_mut(chunk_id) };
+                *chnk = (*chnk).max(*accum);
+            });
+
+            // while let Some(chunk) = impact_group
+            //     .next_large_chunk::<Compressor>(&self.list_data, &mut data.large_decode_buf)
+            // {
+            //     chunk.iter().cloned().for_each(|doc_id| {
+            //         let doc_id = doc_id as usize;
+            //         let chunk_id = doc_id >> search::CHUNK_SHIFT;
+            //         let accum = unsafe { accumulators.get_unchecked_mut(doc_id) };
+            //         *accum += impact as ScoreType;
+            //         let chnk = unsafe { chunks.get_unchecked_mut(chunk_id) };
+            //         *chnk = (*chnk).max(*accum);
+            //     });
+            // }
+            // while let Some(chunk) =
+            //     impact_group.next_chunk::<Compressor>(&self.list_data, &mut data.decode_buf)
+            // {
+            //     chunk.iter().cloned().for_each(|doc_id| {
+            //         let doc_id = doc_id as usize;
+            //         let chunk_id = doc_id >> search::CHUNK_SHIFT;
+            //         let accum = unsafe { accumulators.get_unchecked_mut(doc_id) };
+            //         *accum += impact as ScoreType;
+            //         let chnk = unsafe { chunks.get_unchecked_mut(chunk_id) };
+            //         *chnk = (*chnk).max(*accum);
+            //     });
+            // }
             postings_budget -= num_postings;
         }
     }

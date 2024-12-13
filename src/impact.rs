@@ -1,4 +1,5 @@
 use crate::{compress, range};
+use compression;
 
 #[derive(Copy, Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct MetaData {
@@ -52,6 +53,18 @@ impl Impact {
             initial: 0,
             bytes,
         }
+    }
+
+    pub fn qmx_encode(impact: u16, docs: &[u32]) -> (MetaData, Vec<u8>){
+       let output = compression::encode(docs);
+       (
+        MetaData {
+            impact,
+            count: docs.len() as u32,
+            bytes: output.len() as u32,
+        },
+        output,
+    )
     }
 
     #[must_use]

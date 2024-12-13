@@ -14,7 +14,8 @@ impl List {
         let mut impacts = smallvec::SmallVec::new();
         for (meta_data, data) in input
             .iter()
-            .map(|(impact, docs)| impact::Impact::encode::<Compressor>(*impact, docs))
+            // .map(|(impact, docs)| impact::Impact::encode::<Compressor>(*impact, docs))
+            .map(|(impact, docs)| impact::Impact::qmx_encode(*impact, docs))
         {
             impacts.push(meta_data);
             output.extend_from_slice(&data);

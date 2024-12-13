@@ -4,15 +4,16 @@ pub const CHUNK_SIZE: usize = 128;
 pub const CHUNK_SHIFT: usize = CHUNK_SIZE.ilog2() as usize;
 
 use crate::{
-    compress::{self},
+    // compress::{self},
     impact, ScoreType,
 };
 
 #[derive(Debug)]
 pub struct Scratch {
     pub impacts: Vec<Vec<impact::Impact>>,
-    pub large_decode_buf: compress::LargeBuffer,
-    pub decode_buf: compress::Buffer,
+    // pub large_decode_buf: compress::LargeBuffer,
+    // pub decode_buf: compress::Buffer,
+    pub decode_buf: Vec<u32>,
     pub chunk: Vec<ScoreType>,
     pub accumulators: Vec<ScoreType>,
     pub heap: BinaryHeap<Result>,
@@ -24,8 +25,9 @@ impl Scratch {
             impacts: (0..=max_level * max_weight).map(|_| Vec::new()).collect(),
             accumulators: vec![0; max_doc_id as usize + 1],
             chunk: vec![0; ((max_doc_id as usize + 1) >> CHUNK_SHIFT) + 1],
-            large_decode_buf: [0; compress::LARGE_BLOCK_LEN],
-            decode_buf: [0; compress::BLOCK_LEN],
+            // large_decode_buf: [0; compress::LARGE_BLOCK_LEN],
+            // decode_buf: [0; compress::BLOCK_LEN],
+            decode_buf: vec![0; (max_doc_id as usize + 1) + 512 + 1000],
             heap: BinaryHeap::with_capacity(10000),
         }
     }
