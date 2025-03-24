@@ -36,7 +36,7 @@ url = "2.2.2"
 reqwest = { version = "0.11.10", features = ["json"] }
 governor = "0.4.2"
 futures = { version = "0.3.21" }
-compression = { version = "0.1.0", path = "../compression" }
+qmx_compression = { version = "0.1.0", path = "../qmx_compression" }
 
 [build-dependencies]
 # Note from v0.11 `protoc` is no longer bundled with prost

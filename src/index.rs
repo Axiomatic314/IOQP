@@ -23,7 +23,7 @@ use crate::search;
 use crate::util;
 use crate::ScoreType;
 
-use compression;
+use qmx_compression;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Index<C: crate::compress::Compressor> {
@@ -261,7 +261,7 @@ impl<Compressor: crate::compress::Compressor> Index<Compressor> {
             let impact = impact_group.impact();
             let source: &[u8] = &self.list_data[impact_group.bytes.as_range()];
 
-            compression::decode(source, &mut data.decode_buf, impact_group.count());
+            qmx_compression::decode(source, &mut data.decode_buf, impact_group.count());
             let mut chunk = vec![];
             chunk.extend_from_slice(&data.decode_buf[..(num_postings as usize)]);
             chunk.iter().cloned().for_each(|doc_id|{
