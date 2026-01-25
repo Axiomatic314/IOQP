@@ -252,7 +252,7 @@ impl<Compressor: crate::compress::Compressor> Index<Compressor> {
         chunks.iter_mut().for_each(|x| *x = 0);
         let impact_iter = data.impacts.iter_mut().rev().flat_map(|i| i.iter_mut());
         for impact_group in impact_iter {
-            let num_postings = impact_group.impact() as i64;
+            let num_postings = impact_group.count() as i64;
             if (postings_budget - num_postings) < 0{
                 break;
             }
